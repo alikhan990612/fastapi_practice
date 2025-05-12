@@ -24,20 +24,22 @@ def get_hotels(
 
 @router.post("")
 def create_hotel(
-    title: str = Body(embed=True)
+    title: str = Body(),
+    name: str = Body()
     ):
     global hotels
     hotels.append({
         "id": hotels[-1]['id'] + 1,
-        "title": title
+        "title": title,
+        "name": name
     })
     return {"Status": "OK"}
 
 @router.put("/{hotel_id}")
 def change_hotel_all_params(
     hotel_id: int,
-    title: str = Body(embed=True),
-    name: str = Body(embed=True) 
+    title: str = Body(),
+    name: str = Body() 
     ):
     global hotels
     for hotel in hotels:
@@ -50,8 +52,8 @@ def change_hotel_all_params(
 @router.patch("/{hotel_id}")
 def change_hotel_needed_params(
         hotel_id: int,
-        title: str | None = Body(None, embed=True),
-        name: str | None = Body(None, embed=True)
+        title: str | None = Body(None),
+        name: str | None = Body(None)
     ):
     global hotels
     for hotel in hotels:
