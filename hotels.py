@@ -1,5 +1,5 @@
 from fastapi import Query, Body ,APIRouter
-from pydantic import BaseModel
+from schemas.hotels import Hotel, HotelPatch
 
 router = APIRouter(prefix="/hotels")
 
@@ -7,10 +7,6 @@ hotels = [
     {"id": 1, "title": "Royal", "name": "Luxury"},
     {"id": 2, "title": "Rolex", "name": "Grand"}
 ]
-
-class Hotel(BaseModel):
-    title: str
-    name: str
 
 @router.get("")
 def get_hotels(
@@ -48,18 +44,14 @@ def change_hotel_all_params(hotel_id: int, hotel_data: Hotel):
     return {"Stauts": "Hotel not found"}
 
 @router.patch("/{hotel_id}")
-def change_hotel_needed_params(
-        hotel_id: int,
-        title: str | None = Body(None),
-        name: str | None = Body(None)
-    ):
+def change_hotel_needed_params(hotel_id: int, hotel_data: HotelPatch):
     global hotels
     for hotel in hotels:
         if hotel['id'] == hotel_id:
-            if title is not None:
-                hotel['title'] = title
-            if name is not None:
-                hotel['name'] = name
+            if hotel_data.title is not None:
+                hotel['title'] = hotel_data.title
+            if hotel_data.name is not None:
+                hotel['name'] = hotel_data.name
             return {"Status": "OK"}
     return {"Status": "Hotel not found"}
 
