@@ -1,5 +1,6 @@
-from fastapi import Query, Body ,APIRouter
+from fastapi import Query, Body, APIRouter
 from schemas.hotels import Hotel, HotelPatch
+from dependencies import PaginationDep
 
 router = APIRouter(prefix="/hotels")
 
@@ -13,59 +14,61 @@ hotels = [
     {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
 ]
 
+
 @router.get("")
 def get_hotels(
-    id: int | None  = Query(None, description="Название айдишника"),
-    title: str | None = Query(None, description="Название отеля"),
-    page: int | None = Query(1, ge=1),
-    per_page: int | None = Query(3, ge=1, le=30)
-    ):
-    #return [hotel for hotel in hotels if hotel["title"] == title and hotel["id"] == id]
+    pagination: PaginationDep,
+    id: int | None = Query(None, description="Название айдишника"),
+    title: str | None = Query(None, description="Название отеля")
+):
+    # return [hotel for hotel in hotels if hotel["title"] == title and hotel["id"] == id]
     hotels_ = []
     for hotel in hotels:
-        if id and hotel['id'] != id:
+        if id and hotel["id"] != id:
             continue
-        if title and hotel['title'] != title:
+        if title and hotel["title"] != title:
             continue
         hotels_.append(hotel)
-    start = (page - 1) * per_page
-    end = start + per_page
+    start = (pagination.page - 1) * pagination.per_page
+    end = start + pagination.per_page
     return hotels_[start:end]
+
 
 @router.post("")
 def create_hotel(hotel_data: Hotel):
     global hotels
-    hotels.append({
-        "id": hotels[-1]['id'] + 1,
-        "title": hotel_data.title,
-        "name": hotel_data.name
-    })
+    hotels.append(
+        {"id": hotels[-1]["id"] + 1, "title": hotel_data.title, "name": hotel_data.name}
+    )
     return {"Status": "OK"}
+
 
 @router.put("/{hotel_id}")
 def change_hotel_all_params(hotel_id: int, hotel_data: Hotel):
     global hotels
     for hotel in hotels:
-        if hotel['id'] == hotel_id:
-            hotel['title'] = hotel_data.title
-            hotel['name'] = hotel_data.name
+        if hotel["id"] == hotel_id:
+            hotel["title"] = hotel_data.title
+            hotel["name"] = hotel_data.name
             return {"Status": "OK"}
     return {"Stauts": "Hotel not found"}
+
 
 @router.patch("/{hotel_id}")
 def change_hotel_needed_params(hotel_id: int, hotel_data: HotelPatch):
     global hotels
     for hotel in hotels:
-        if hotel['id'] == hotel_id:
+        if hotel["id"] == hotel_id:
             if hotel_data.title is not None:
-                hotel['title'] = hotel_data.title
+                hotel["title"] = hotel_data.title
             if hotel_data.name is not None:
-                hotel['name'] = hotel_data.name
+                hotel["name"] = hotel_data.name
             return {"Status": "OK"}
     return {"Status": "Hotel not found"}
+
 
 @router.delete("/{hotel_id}")
 def delete_hotel(hotel_id: int):
     global hotels
-    hotels = [hotel for hotel in hotels if hotel['id'] != hotel_id]
-    return {"Status": 'OK'}
+    hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
+    return {"Status": "OK"}
