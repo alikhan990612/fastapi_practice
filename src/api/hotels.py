@@ -51,7 +51,7 @@ def change_hotel_all_params(hotel_id: int, hotel_data: Hotel):
             hotel["title"] = hotel_data.title
             hotel["name"] = hotel_data.name
             return {"Status": "OK"}
-    return {"Stauts": "Hotel not found"}
+    return {"Status": "Hotel not found"}
 
 
 @router.patch("/{hotel_id}")
