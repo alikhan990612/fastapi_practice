@@ -1,38 +1,24 @@
 from fastapi import Query, Body, APIRouter
 from src.schemas.hotels import Hotel, HotelPatch
 from src.api.dependencies import PaginationDep
-from src.database import async_session_maker
-from sqlalchemy import insert
+from src.database import async_session_maker, engine
+from sqlalchemy import insert, select
 from src.models.hotels import HotelsOrm
-from src.database import engine
 
 router = APIRouter(prefix="/hotels")
 
-hotels = [
-    {"id": 1, "title": "Sochi", "name": "sochi"},
-    {"id": 2, "title": "Дубай", "name": "dubai"},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
-]
-
-
 @router.get("")
-def get_hotels(
+async def get_hotels(
     pagination: PaginationDep,
     id: int | None = Query(None, description="Название айдишника"),
     title: str | None = Query(None, description="Название отеля")
 ):
-    # return [hotel for hotel in hotels if hotel["title"] == title and hotel["id"] == id]
-    hotels_ = []
-    for hotel in hotels:
-        if id and hotel["id"] != id:
-            continue
-        if title and hotel["title"] != title:
-            continue
-        hotels_.append(hotel)
+    async with async_session_maker() as session:
+        query = select(HotelsOrm)
+        result = await session.execute(query)
+        hotels = result.scalars().all()
+        # print(type(hotels), hotels)
+        return hotels
     start = (pagination.page - 1) * pagination.per_page
     end = start + pagination.per_page
     return hotels_[start:end]
@@ -42,7 +28,7 @@ def get_hotels(
 async def create_hotel(hotel_data: Hotel):
     async with async_session_maker() as session:
         add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
-        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
+        # print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
         await session.execute(add_hotel_stmt)
         await session.commit()
     return {"Status": "OK"}
